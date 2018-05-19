@@ -60,6 +60,8 @@ int main (int argc, char const *argv[])
         cout << "fazer a multiplicacao usando openMP\n";
     }
 
+    
+
     cout << "fim\n";
 }
 
