@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <iostream>
-#include <fstream>
+// #include <fstream>
 #include "matrix_reader.h"
 using namespace std;
 
@@ -47,7 +47,8 @@ int main (int argc, char const *argv[])
     double **b_matrix;
     // double **c_matrix;
 
-    a_matrix = read_matrix(argv[2]);
+    // a_matrix = read_matrix(argv[2]);
+    BlockMatrix bmA = read_matrix(argv[2]);
 
     if (strcmp(argv[1], "p") == 0) {
         // multiplica as matrizes com pthreads
@@ -60,7 +61,7 @@ int main (int argc, char const *argv[])
         cout << "fazer a multiplicacao usando openMP\n";
     }
 
-    
+    bmA.destroy();
 
     cout << "fim\n";
 }

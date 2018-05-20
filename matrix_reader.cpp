@@ -24,18 +24,18 @@ void fill_previous(int prev_line, int prev_column, int line, int column, double 
     int i = actual_specified - 1;
     // printf("last_specified: %d, actual_specified: %d, i: %d\n", last_specified, actual_specified, i);
     while (i > last_specified) {
-           // if (i % columns == 0)
            // printf("changing [%d, %d], i: %d \n", i / columns, i % columns, i);
-           matrix[i / columns][i % columns] = 10;
+           matrix[i / columns][i % columns] = 0.0;
            i = i - 1;
     }
 }
 
-double **read_matrix(const char *path) {
+BlockMatrix read_matrix(const char *path) {
 
     // printf("path: %s\n", path);
     FILE *matrix_file;
-    double **matrix = NULL;
+    // double **matrix = NULL;
+    BlockMatrix *bm;
     if ((matrix_file = fopen (path,"r")) != NULL) {
         cout << "montar a matriz a partir dos dados do arquivo\n";
 
@@ -67,11 +67,18 @@ double **read_matrix(const char *path) {
         //     matrix[i] = malloc(columns * sizeof(double));
         // }
 
-        matrix = new double*[lines];
+        double **matrix = new double*[lines];
         for (int i = 0; i < lines; i++) {
             matrix[i] = new double[columns];
         }
 
+        // BlockMatrix bm(lines, columns, matrix);
+        // *bm = BlockMatrix(lines, columns, matrix);
+
+        BlockMatrix tmp(lines, columns, matrix);
+        bm = &tmp;
+
+        // bm = &block_mat(lines, columns, matrix);
 
         // while ( getc(matrix_file) != EOF) {
         int line;
@@ -83,7 +90,7 @@ double **read_matrix(const char *path) {
             // fscanf(matrix_file, "%d", &line);
             fscanf(matrix_file, "%d", &column);
             fscanf(matrix_file, "%lf", &value);
-            //comvercao para a notacao de indeces de 0 a N-1
+            //comvercao para a notacao de indices de 0 a N-1
             line--;
             column--;
             // printf("line: %d, column: %d, value: %lf\n", line, column, value);
@@ -95,21 +102,14 @@ double **read_matrix(const char *path) {
             matrix[line][column] = value;
         }
 
-        print_matrix(lines, columns, matrix);
-
-        // TODO dar free na matriz em algum outro lugar
-        for (int i = 0; i < lines; i++) {
-            // free(matrix[i]);
-            delete [] matrix[i];
-        }
-        // free(matrix);
-        delete [] matrix;
+        // print_matrix(lines, columns, matrix);
+        print_matrix(lines, columns, bm->matrix);
 
 
         fclose (matrix_file);
     } else cout << "Unable to open file\n";
 
 
-    return matrix;
+    return *bm;
 }
 

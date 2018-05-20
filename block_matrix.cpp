@@ -1,22 +1,41 @@
-#ifndef BLOCK_MATRIX
-#define BLOCK_MATRIX
+#include "block_matrix.h"
 
-class BlockMatrix;
 
-class BlockMatrix {
-public:
-	int lines;
-	int columns;
 
-    // Lake *lake; // Lagoa
-    // int id;     // ID do sapo
-    // int gender; // Genero (Ra:0, Sapo:1)
-    // int pos;    // Posicao do sapo na lagoa
-    // /**************************************************************************/
-    // BlockMatrix (int _lines, int _columns); // Construtor
-    // void set_val (Lake *_lake);           // Define a lagoa
-    // int can_move ();                       // Devolve a distancia que pode pular
-    // void move (int dist);                  // Move o sapo dist pedras
-};
+/******************************************************************************/
+BlockMatrix::BlockMatrix (int _n_lines, int _n_columns, double **_matrix) {
+    n_lines = _n_lines;
+    n_columns = _n_columns;
+    matrix = _matrix;
+}
 
-#endif
+
+// /******************************************************************************/
+// void BlockMatrix::set_val (int line, int column, double val) {
+//     matrix[line][column] = val;
+// }
+
+// /******************************************************************************/
+// double BlockMatrix::get_val (int line, int column) {
+//     return matrix[line][column];
+// }
+
+// /******************************************************************************/
+// int BlockMatrix::n_lines () {
+//     return n_lines;
+// }
+
+// /******************************************************************************/
+// int BlockMatrix::n_columns () {
+//     return n_columns;
+// }
+
+/******************************************************************************/
+void BlockMatrix::destroy () {
+    for (int i = 0; i < n_lines; i++) {
+        // free(matrix[i]);
+        delete [] matrix[i];
+    }
+    // free(matrix);
+    delete [] matrix;
+}
