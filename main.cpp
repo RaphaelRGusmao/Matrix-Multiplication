@@ -1,23 +1,19 @@
 /******************************************************************************
  *                               IME-USP (2018)                               *
- *           EP1 de MAC0219 Introdução à Computação Concorrente,              *
- *                       Paralela e Distribuída                               *
+ *             MAC0219 - Programacao Concorrente e Paralela - EP1             *
  *                                                                            *
  *                                 Principal                                  *
  *                                                                            *
  *                      Marcelo Schmitt   - NUSP 9297641                      *
  *                      Raphael R. Gusmao - NUSP 9778561                      *
  ******************************************************************************/
+
 #include <bits/stdc++.h>
 #include <stdint.h>
-#include <time.h>
-#include <iostream>
-// #include <fstream>
-#include "matrix_reader.h"
+#include "matrix.h"
 using namespace std;
 
-// Variavel global que indica se deve ou nao imprimir o estado final do programa
-static int silent = 0;
+#define DEBUG 1
 
 /******************************************************************************/
 // Retorna o tempo atual em nanossegundos
@@ -30,40 +26,49 @@ uint64_t getTime ()
 
 /******************************************************************************/
 // Funcao principal
-// Recebe os argumentos de implementacao, caminho para a matriz A, caminho para
-// a matriz B, e caminho para a matriz C.
-int main (int argc, char const *argv[])
+// Argumentos:
+// matrix_A: caminho da matriz A
+// matrix_A: caminho da matriz B
+// matrix_A: caminho da matriz C
+// Implementation: "p" = Pthreads, "o" = OpenMP, "s" = sequencial
+//                 (argumento opcional, "p" eh o padrao)
+int main (int argc, char **argv)
 {
-    if (argc < 5) {
-        printf("Número insuficientes de argumentos\n");
-        return -1;
+    if (argc != 4 && argc != 5) {
+        cout << "Usage: ./main <matrix_A> <matrix_B> <matrix_C> [Implementation]" << endl;
+        return 1;
+    }
+    char implementation = 'p'; if (argc == 5) implementation = argv[4][0];
+    char *A_path = argv[1];
+    char *B_path = argv[2];
+    char *C_path = argv[3];
+
+    Matrix A(A_path);
+    if (DEBUG) {
+        cout << CYAN << "A:" << END << endl; A.show(); cout << endl;
     }
 
-    // ideia inicial: trazer as matrizes A e B inteiramente para a memória,
-    // depois dividimos elas em blocos e criamos várias threads para multiplicar
-    // cada bloco o juntar os resultados.
-
-    double **a_matrix;
-    double **b_matrix;
-    // double **c_matrix;
-
-    // a_matrix = read_matrix(argv[2]);
-    BlockMatrix bmA = read_matrix(argv[2]);
-
-    if (strcmp(argv[1], "p") == 0) {
-        // multiplica as matrizes com pthreads
-        // TODO
-        cout << "fazer a multiplicacao usando pthreads\n";
-
-    } else if (strcmp(argv[1], "o") == 0) {
-        // faz com openMP
-        // TODO
-        cout << "fazer a multiplicacao usando openMP\n";
+    Matrix B(B_path);
+    if (DEBUG) {
+        cout << CYAN << "B:" << END << endl; B.show(); cout << endl;
     }
 
-    bmA.destroy();
+    cout << CYAN << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Inicio ]" << END << endl;
+    uint64_t beginning = getTime();
 
-    cout << "fim\n";
+        Matrix C = MATRIX_mult(&A, &B, implementation);
+
+    uint64_t finish = getTime();
+    cout << CYAN << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Fim ]" << END << endl << endl;
+
+    if (DEBUG) {
+        cout << CYAN << "C:" << END << endl; C.show(); cout << endl;
+    }
+
+    uint64_t total_time = finish - beginning;
+    cout << GREEN << "Tempo de execucao: " << finish - beginning << " ns" << END << endl;
+
+    C.save(C_path);
 }
 
 /******************************************************************************/
