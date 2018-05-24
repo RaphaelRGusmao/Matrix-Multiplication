@@ -10,7 +10,7 @@
 
 .PHONY: clean
 CC = g++
-CFLAGS = -Wall -O2 -g
+CFLAGS = -Wall -O0 -g
 OBJS = \
 	matrix.o \
 	main.o
@@ -18,7 +18,8 @@ OBJS = \
 all: main
 
 main: $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ -lpthread
+	$(CC) $(CFLAGS) $^ -o $@ -lpthread -fopenmp
+
 	make clean
 
 %.o: %.c %.h
@@ -31,6 +32,8 @@ clean:
 	rm -f *.o *~
 
 run:
-	./main "matrix/A.txt" "matrix/B.txt" "matrix/C.txt" s
+	./main s "matrix/A.txt" "matrix/B.txt" "matrix/C.txt"
 
+mar_test:
+	./main o "matrix/test1.txt" "matrix/test2.txt" "matrix/result_test.txt"
 ################################################################################
