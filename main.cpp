@@ -13,7 +13,11 @@
 #include "matrix.h"
 using namespace std;
 
-#define DEBUG 1
+#define DEBUG
+
+#ifdef DEBUG
+    #define D(X) X
+#endif
 
 /******************************************************************************/
 // Retorna o tempo atual em nanossegundos
@@ -35,23 +39,19 @@ uint64_t getTime ()
 int main (int argc, char **argv)
 {
     if (argc != 4 && argc != 5) {
-        cout << "Usage: ./main <matrix_A> <matrix_B> <matrix_C> [Implementation]" << endl;
+        cout << "Usage: ./main <Implementation> <matrix_A> <matrix_B> <matrix_C>" << endl;
         return 1;
     }
-    char implementation = 'p'; if (argc == 5) implementation = argv[4][0];
-    char *A_path = argv[1];
-    char *B_path = argv[2];
-    char *C_path = argv[3];
+    char implementation = 'p'; if (argc == 5) implementation = argv[1][0];
+    char *A_path = argv[2];
+    char *B_path = argv[3];
+    char *C_path = argv[4];
 
     Matrix A(A_path);
-    if (DEBUG) {
-        cout << CYAN << "A:" << END << endl; A.show(); cout << endl;
-    }
+    D(cout << CYAN << "A:" << END << endl; A.show(); cout << endl;)
 
     Matrix B(B_path);
-    if (DEBUG) {
-        cout << CYAN << "B:" << END << endl; B.show(); cout << endl;
-    }
+    D(cout << CYAN << "B:" << END << endl; B.show(); cout << endl;)
 
     cout << CYAN << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Inicio ]" << END << endl;
     uint64_t beginning = getTime();
@@ -61,9 +61,7 @@ int main (int argc, char **argv)
     uint64_t finish = getTime();
     cout << CYAN << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Fim ]" << END << endl << endl;
 
-    if (DEBUG) {
-        cout << CYAN << "C:" << END << endl; C.show(); cout << endl;
-    }
+    D(cout << CYAN << "C:" << END << endl; C.show(); cout << endl;)
 
     uint64_t total_time = finish - beginning;
     cout << GREEN << "Tempo de execucao: " << finish - beginning << " ns" << END << endl;
