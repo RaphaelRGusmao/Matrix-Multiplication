@@ -12,6 +12,7 @@
 CC = g++
 CFLAGS = -Wall -O0 -g
 OBJS = \
+	block_matrix.o \
 	matrix.o \
 	main.o
 
@@ -19,7 +20,6 @@ all: main
 
 main: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ -lpthread -fopenmp
-
 	make clean
 
 %.o: %.c %.h
@@ -36,4 +36,6 @@ run:
 
 mar_test:
 	./main o "matrix/test1.txt" "matrix/test2.txt" "matrix/result_test.txt"
+	./main o "matrix/test1.txt" "matrix/test3.txt" "matrix/result_test.txt"
+	./main o "matrix/test4.txt" "matrix/test3.txt" "matrix/result_test.txt"
 ################################################################################

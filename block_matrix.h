@@ -8,8 +8,8 @@
  *                      Raphael R. Gusmao - NUSP 9778561                      *
  ******************************************************************************/
 
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef BLOCK_MATRIX_H
+#define BLOCK_MATRIX_H
 
 // Fonte
 #define UNDERLINE "\033[4m"    // Underline_
@@ -19,33 +19,40 @@
 #define YELLOW    "\033[33;1m" // Amarelo
 #define END       "\033[0m"    // Para de pintar
 
+#include "matrix.h"
+
 // Matriz
-class Matrix {
+class BlockMatrix {
 public:
-    double **matrix; // Matriz
+    Matrix *matrix;
     int rows;        // Numero de linhas
     int cols;        // Numero de colunas
+    int block_rows;
+    int block_cols;
+    int origin_row_index;
+    int origin_col_index;
     /**************************************************************************/
-    Matrix (int _rows, int _cols); // Construtor (cria uma matriz de zeros)
-    Matrix (char *path);           // Construtor (le a matriz do arquivo path)
-    ~Matrix ();                    // Destrutor
+    BlockMatrix (Matrix *_matrix, int _block_rows, int _block_cols, int _origin_row_index, int _origin_col_index); // Construtor (uma matriz que é um block de outra matriz)
     void show ();                  // Exibe a matriz
-    void save (char *path);        // Salva a matrix no arquivo path
-private:
-    void zeros ();                 // Inicializa a matriz com zeros
+    // BlockMatrix (int _rows, int _cols); // Construtor (cria uma matriz de zeros)
+    // BlockMatrix (char *path);           // Construtor (le a matriz do arquivo path)
+    // ~BlockMatrix ();                    // Destrutor
+    // void save (char *path);        // Salva a matrix no arquivo path
+// private:
+    // void zeros ();                 // Inicializa a matriz com zeros
 };
 
 // // Devolve a matriz C = AB
-// Matrix MATRIX_mult (Matrix *A, Matrix *B, char implementation);
+// BlockMatrix MATRIX_mult (BlockMatrix *A, BlockMatrix *B, char implementation);
 
 // // Faz a multiplicacao C = AB sequencialmente
-// void sequencial_mult (Matrix *A, Matrix *B, Matrix *C);
+// void sequencial_mult (BlockMatrix *A, BlockMatrix *B, BlockMatrix *C);
 
 // // Faz a multiplicacao C = AB usando OpenMP
-// void openmp_mult (Matrix *A, Matrix *B, Matrix *C);
+// void openmp_mult (BlockMatrix *A, BlockMatrix *B, BlockMatrix *C);
 
 // // Faz a multiplicacao C = AB usando Pthreads
-// void pthreads_mult (Matrix *A, Matrix *B, Matrix *C);
+// void pthreads_mult (BlockMatrix *A, BlockMatrix *B, BlockMatrix *C);
 
 #endif
 
