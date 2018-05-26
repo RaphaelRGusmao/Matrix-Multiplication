@@ -48,33 +48,51 @@ int gcd(int a, int b)
     return gcd(b%a, a);
 }
  
-// // Function to calculate all common divisors
-// // of two given numbers
-// // a, b --> input integer numbers
-// int commDiv(int a,int b)
-// {
-//     // find gcd of a,b
-//     int n = gcd(a, b);
-//     // Count divisors of n.
-//     int result = 0;
-//     for (int i=1; i<=sqrt(n); i++)
-//     {
-//         // if 'i' is factor of n
-//         if (n%i==0)
-//         {
-//             // check if divisors are equal
-//             if (n/i == i)
-//                 result += 1;
-//             else
-//                 result += 2;
-//         }
-//     }
-//     return result;
-// }
+// Function to calculate all common divisors
+// of two given numbers
+// a, b --> input integer numbers
+int commDiv(int a,int b)
+{
+    const int MAX_DIVISORS = 20;
+
+    // find gcd of a,b
+    int n = gcd(a, b);
+    
+    int *divisors = new int[MAX_DIVISORS];
+
+    // Count divisors of n.
+    int result = 0;
+    for (int i=1; i<=sqrt(n); i++)
+    {
+        // if 'i' is factor of n
+        if (n%i==0)
+        {
+            // check if divisors are equal
+            if (n/i == i) {
+                result += 1;    
+                if (result < MAX_DIVISORS) divisors[result] = i;
+            }
+            else {
+                if (result < MAX_DIVISORS-1) {
+                    divisors[result+1] = i;
+                    divisors[result+2] = n/i;
+                }
+                result += 2;
+            }
+        }
+    }
+
+    for (int i = 0; i < result; i++) {
+        printf("%d é difisor comum de %d e %d\n", divisors[i], a, b);
+    }
+
+    return result;
+}
 
 int lcd(int a, int b) {
     int n = gcd(a, b);
-    for (int i=2; i<=sqrt(n); i++) {
+    // printf("gcd %d e %d é: %d \n", a, b, n);
+    for (int i=2; i<=n; i++) {
         if (n % i == 0) return i;
     }
     return 1;
@@ -93,14 +111,31 @@ void sequencial_mult (Matrix *A, Matrix *B, Matrix *C)
 }
 
 /******************************************************************************/
+void sequencial_block_mult (BlockMatrix *A, BlockMatrix *B, BlockMatrix *C)
+{
+    // printf("A->origin_row_index: %d, A->block_rows: %d\n", A->origin_row_index, A->block_rows);
+    // printf("A->origin_col_index: %d, A->block_cols: %d\n", A->origin_col_index, A->block_cols);
+    // printf("B->origin_row_index: %d, B->block_rows: %d\n", B->origin_row_index, B->block_rows);
+    // printf("B->origin_col_index: %d, B->block_cols: %d\n", B->origin_col_index, B->block_cols);
+    for (int i = 0; i < A->block_rows; i++) {
+        for (int j = 0; j < B->block_cols; j++) {
+            for (int k = 0; k < A->block_cols; k++) {
+                // printf("A->origin_col_index: %d, k: %d\n", A->origin_col_index, k);
+                C->matrix->matrix[A->origin_row_index + i][B->origin_col_index + j] += A->matrix->matrix[A->origin_row_index +i][A->origin_col_index + k] * B->matrix->matrix[A->origin_col_index + k][B->origin_col_index + j];
+            }
+        }
+    }
+}
+
+
+/******************************************************************************/
 void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
 {
-    // TODO
 
-    printf("A->rows: %d\n", A->rows);
-    printf("A->cols: %d\n", A->cols);
-    printf("B->rows: %d\n", B->rows);
-    printf("B->cols: %d\n", B->cols);
+    D(printf("A->rows: %d\n", A->rows);)
+    D(printf("A->cols: %d\n", A->cols);)
+    D(printf("B->rows: %d\n", B->rows);)
+    D(printf("B->cols: %d\n", B->cols);)
 
     int T = 2; //200;
     size_t p;
@@ -111,26 +146,24 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
     t0 = omp_get_wtime();
 
     int b_a = lcd(A->rows, A->cols);
-    printf("b_a %d\n", b_a);
+    // int b_a = lcd(A->cols, A->rows);
+    // printf("b_a %d\n", b_a);
+    
     // Altura de cada um dos blocos da matriz A
-    // int A_block_high = floor(1.0 * A->rows / T);
-    // int A_block_high = A->rows / b_a;
     int A_block_high = b_a;
-    printf("A_block_high: %d\n", A_block_high);
+    D(printf("A_block_high: %d\n", A_block_high);)
+    
     // Comprimento de cada um dos blocos da matriz A e também altura de 
     // cada um dos blocos da matriz B
-    // int A_block_lenght = floor(1.0 * A->cols / T);
-    // int A_block_lenght = A->cols / b_a;
     int A_block_lenght = lcd(A->cols, B->rows);
-    // int A_block_lenght = b_a;
     int B_block_high = A_block_lenght;
-    printf("A_block_lenght: %d\n", A_block_lenght);
+    D(printf("A_block_lenght = B_block_high: %d\n", A_block_lenght);)
+
     // Comprimento de cada um dos blocos da matriz B
-    // int B_block_lenght = floor(1.0 * B->cols / T);
     int b_b = lcd(B->rows, B->cols);
     // int B_block_lenght = B->cols / b_b;
     int B_block_lenght = b_b;
-    printf("B_block_lenght: %d\n", B_block_lenght);
+    D(printf("B_block_lenght: %d\n", B_block_lenght);)
 
 
     // BlockMatrix *b0 = new BlockMatrix(A, A_block_high, A_block_lenght, 0, 0);
@@ -141,21 +174,33 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
     // printf("Blocos da matriz A\n");
 
     printf("Blocos das matrizes:\n");
-    for (int i = 0; i < A->rows / A_block_high; i++) {
-        for (int j = 0; j < B->cols / B_block_lenght; j++) {
+    for (int j = 0; j < B->cols / B_block_lenght; j++) {
+        for (int i = 0; i < A->rows / A_block_high; i++) {
             BlockMatrix blockC(C, A_block_high, B_block_lenght, i * A_block_high, j * B_block_lenght);
             for (int k = 0; k < A->cols / A_block_lenght; k++) {
-                printf("BlocoA [%d, %d]: \n", i, j);
+                // printf("BlocoC [%d, %d]: \n", i, j);
+                // blockC.show();
+                printf("BlocoA [%d, %d]: \n", i, k);
                 BlockMatrix blockA(A, A_block_high, A_block_lenght, i * A_block_high, k * A_block_lenght);
                 blockA.show(); 
                 printf("BlocoB [%d, %d]: \n", k, j);
                 BlockMatrix blockB(B, B_block_high, B_block_lenght, k * B_block_high, j * B_block_lenght);
                 blockB.show();
-                printf("--------------\n");
-                // TODO multiplicar as matrizes e armazenar na (bloco)matriz C
                 // matriz_soma[r, t] += blockA * blockB;
                 // C = C + blockA * blockB
+
+                // BlockMatrix testC(C, A_block_high, B_block_lenght, i * A_block_high, j * B_block_lenght);
+                // sequencial_block_mult(&blockA, &blockB, &testC);
+                // printf("testC intermediario: \n");
+                // testC.show();
+                
+                // Multiplicar as matrizes e armazena na matriz (bloco) C
+                sequencial_block_mult(&blockA, &blockB, &blockC);
+                // printf("BlocoC intermediario: \n");
+                // blockC.show();
+                // printf("--------------\n");
             }
+            printf("###############\n");
             printf("BlocoC [%d, %d]: \n", i, j);
             blockC.show();
             printf("###############\n");
@@ -165,17 +210,17 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
     // dividir pelo mdc das dimensões
 
     #pragma omp parallel for private(p) num_threads(T)
-  //   for (int i = p * A_block_high; i < (p+1) * A_block_high; i++) {
-  //    double sum = 0;
-  //    for (int j = p * A_block_lenght; j < (p+1) * A_block_lenght; j++) {
-  //        // sum += A->matrix[i][j] * B->matrix[i][j];
+    //   for (int i = p * A_block_high; i < (p+1) * A_block_high; i++) {
+    //    double sum = 0;
+    //    for (int j = p * A_block_lenght; j < (p+1) * A_block_lenght; j++) {
+    //        // sum += A->matrix[i][j] * B->matrix[i][j];
         //  // multiplicar matrizes
-  //        printf("Block A[%d .. %d][%d .. %d] * Block B[%d .. %d][%d .. %d]\n", 
-  //                        i, i + A_block_lenght, i, i + A_block_high, j, j + B_block_lenght, j, j + B_block_high);
-  //    }
+    //        printf("Block A[%d .. %d][%d .. %d] * Block B[%d .. %d][%d .. %d]\n", 
+    //                        i, i + A_block_lenght, i, i + A_block_high, j, j + B_block_lenght, j, j + B_block_high);
+    //    }
         // // C.matrix[i][j] = sum;
         // printf("\n");
-  //   }
+    //   }
 
 
     t1 = omp_get_wtime();
@@ -197,7 +242,8 @@ void pthreads_mult (Matrix *A, Matrix *B, Matrix *C)
 // e juntar os resultados.
 Matrix MATRIX_mult (Matrix *A, Matrix *B, char implementation)
 {
-    Matrix C(A->rows, B->cols); //TODO o construtor inicializa C com zeros. Isso não é necessário
+    // Matrix C(A->rows, B->cols); //TODO o construtor inicializa C com zeros. Isso não é necessário
+    Matrix C(A->rows, B->cols);
     switch (implementation) {
         case 's':
             cout << "Sequencial" << endl;

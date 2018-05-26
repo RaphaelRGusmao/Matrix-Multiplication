@@ -27,12 +27,14 @@ public:
     int cols;        // Numero de colunas
     /**************************************************************************/
     Matrix (int _rows, int _cols); // Construtor (cria uma matriz de zeros)
+    Matrix (int _rows, int _cols, bool _zeros); // Construtor (cria uma matriz vazia se _zeros for false)
     Matrix (char *path);           // Construtor (le a matriz do arquivo path)
     ~Matrix ();                    // Destrutor
     void show ();                  // Exibe a matriz
     void save (char *path);        // Salva a matrix no arquivo path
 private:
-    void zeros ();                 // Inicializa a matriz com zeros
+    void init(int _rows, int _cols); // Inicializa a matriz sem valores
+    void zeros ();                 // Preenche a matriz com zeros
 };
 
 // // Devolve a matriz C = AB

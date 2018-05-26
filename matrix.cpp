@@ -12,12 +12,26 @@
 #include "matrix.h"
 using namespace std;
 
+
 /******************************************************************************/
 Matrix::Matrix (int _rows, int _cols)
 {
-    rows = _rows;
-    cols = _cols;
+	this->init(_rows, _cols);
     this->zeros();
+}
+
+/******************************************************************************/
+Matrix::Matrix (int _rows, int _cols, bool _zeros)
+{
+	this->init(_rows, _cols);
+	if (_zeros) {
+		this->zeros();
+	} else {
+		matrix[0] = (double*) malloc(rows*cols*sizeof(*matrix[0]));
+	    for (int i = 1; i < rows; i++) {
+	        matrix[i] = matrix[0] + i * cols;
+	    }
+	}
 }
 
 /******************************************************************************/
@@ -29,6 +43,8 @@ Matrix::Matrix (char *path)
         exit(1);
     }
     file >> rows >> cols;
+    matrix = new double*[rows];
+    matrix[0] = new double[rows*cols];
     this->zeros();
     while (!file.eof()) {
         int i, j; double value;
@@ -75,24 +91,23 @@ void Matrix::save (char *path)
 }
 
 /******************************************************************************/
-void Matrix::zeros ()
-{
+void Matrix::init (int _rows, int _cols) {
+    rows = _rows;
+    cols = _cols;
     matrix = new double*[rows];
     matrix[0] = new double[rows*cols];
-    
+}
 
-    memset(matrix[0], 0, rows*cols*sizeof(*matrix[0])); //TODO mudar isso
+/******************************************************************************/
+void Matrix::zeros ()
+{
+    // Troquei o uso do memset pelo calloc conforme esse post:
+    // https://stackoverflow.com/questions/2688466/why-mallocmemset-is-slower-than-calloc
+    // memset(matrix[0], 0, rows*cols*sizeof(*matrix[0])); 
+    matrix[0] = (double*) calloc(rows*cols, sizeof(*matrix[0]));
     for (int i = 1; i < rows; i++) {
         matrix[i] = matrix[0] + i * cols;
     }
-
-    // for (int i = 0; i < rows; i++) {
-    // 	printf("[");
-    // 	for (int j = 0; j < cols; j++) {
-    // 		printf("%.2lf, ", matrix[i][j]);
-    // 	}
-    // 	printf(" ]\n");
-    // }
 }
 
 
