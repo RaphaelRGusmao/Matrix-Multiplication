@@ -37,5 +37,6 @@ run:
 mar_test:
 	./main o "matrix/test5.txt" "matrix/test6.txt" "matrix/result_test.txt"
 #	./main o "matrix/test1.txt" "matrix/test3.txt" "matrix/result_test.txt"
-#	./main o "matrix/test4.txt" "matrix/test3.txt" "matrix/result_test.txt"
+#teste de compatibilidade das dimensoes das matrizes
+#	./main o "matrix/test3.txt" "matrix/test4.txt" "matrix/result_test.txt"
 ################################################################################

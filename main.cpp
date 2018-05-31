@@ -290,6 +290,11 @@ int main (int argc, char **argv)
 
     cout << CYAN << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[ Inicio ]" << END << endl;
     uint64_t beginning = getTime();
+        if (A.cols != B.rows) {
+            cout << "Matriz A tem numero de colunas (" << A.cols << ") diferente do numero de linhas da matriz B (" << B.rows << ").\n";
+            //TODO tem que chamar o destrutor das matrizes A e B?
+            return 0;
+        }
 
         Matrix C = MATRIX_mult(&A, &B, implementation);
 
