@@ -10,9 +10,9 @@
 
 .PHONY: clean
 CC = g++
-CFLAGS = -Wall -O0 -g
+CFLAGS = -Wall -O2 -g
 OBJS = \
-	block_matrix.o \
+	util.o \
 	matrix.o \
 	main.o
 
@@ -32,7 +32,10 @@ clean:
 	rm -f *.o *~
 
 run:
-	./main s "matrix/A.txt" "matrix/B.txt" "matrix/C.txt"
+	clear
+	make
+	clear
+	./main p "matrix/A_python.txt" "matrix/B_python.txt" "matrix/C.txt"
 
 mar_test:
 	./main o "matrix/test5.txt" "matrix/test6.txt" "matrix/result_test.txt"

@@ -12,7 +12,6 @@
 #include "block_matrix.h"
 using namespace std;
 
-
 /******************************************************************************/
 BlockMatrix::BlockMatrix (Matrix *_matrix, int _block_rows, int _block_cols, int _origin_row_index, int _origin_col_index) {
     matrix = _matrix;
@@ -21,14 +20,6 @@ BlockMatrix::BlockMatrix (Matrix *_matrix, int _block_rows, int _block_cols, int
     origin_row_index = _origin_row_index;
     origin_col_index = _origin_col_index;
 }
-
-
-/******************************************************************************/
-// BlockMatrix::~BlockMatrix ()
-// {
-//     // matrix->~Matrix(); // Delegation
-//     delete[] matrix;
-// }
 
 /******************************************************************************/
 void BlockMatrix::show ()
@@ -42,41 +33,22 @@ void BlockMatrix::show ()
 }
 
 /******************************************************************************/
-// void BlockMatrix::save (char *path)
-// {
-//     ofstream file(path);
-//     if (!file.is_open()) {
-//         cout << YELLOW << "Erro ao salvar a matriz (" << path << ")" << END << endl;
-//         exit(1);
-//     }
-//     file << rows << " " << cols << endl;
-//     for (int i = 0; i < rows; i++) {
-//         for (int j = 0; j < cols; j++) {
-//             if (matrix[i][j]) {
-//                 file << i+1 << " " << j+1 << " " << matrix[i][j] << endl;
-//             }
-//         }
-//     }
-//     file.close();
-// }
+void sequencial_block_mult (BlockMatrix *A, BlockMatrix *B, BlockMatrix *C)
+{
+    // printf("A->origin_row_index: %d, A->block_rows: %d\n", A->origin_row_index, A->block_rows);
+    // printf("A->origin_col_index: %d, A->block_cols: %d\n", A->origin_col_index, A->block_cols);
+    // printf("B->origin_row_index: %d, B->block_rows: %d\n", B->origin_row_index, B->block_rows);
+    // printf("B->origin_col_index: %d, B->block_cols: %d\n", B->origin_col_index, B->block_cols);
+    for (int i = 0; i < A->block_rows; i++) {
+        for (int j = 0; j < B->block_cols; j++) {
+            for (int k = 0; k < A->block_cols; k++) {
+                // printf("A->origin_col_index: %d, k: %d\n", A->origin_col_index, k);
+                C->matrix->matrix[A->origin_row_index + i][B->origin_col_index + j] +=
+                A->matrix->matrix[A->origin_row_index +i][A->origin_col_index + k]
+                * B->matrix->matrix[A->origin_col_index + k][B->origin_col_index + j];
+            }
+        }
+    }
+}
 
 /******************************************************************************/
-// void BlockMatrix::zeros ()
-// {
-//     matrix = new double*[rows];
-//     matrix[0] = new double[rows*cols];
-    
-
-//     memset(matrix[0], 0, rows*cols*sizeof(*matrix[0])); //TODO mudar isso
-//     for (int i = 1; i < rows; i++) {
-//         matrix[i] = matrix[0] + i * cols;
-//     }
-
-//     // for (int i = 0; i < rows; i++) {
-//     // 	printf("[");
-//     // 	for (int j = 0; j < cols; j++) {
-//     // 		printf("%.2lf, ", matrix[i][j]);
-//     // 	}
-//     // 	printf(" ]\n");
-//     // }
-// }
