@@ -23,6 +23,14 @@ using namespace std;
     #define D(X)
 #endif
 
+#define TEST
+
+#ifdef TEST
+    #define T(X) X
+#else
+    #define T(X)
+#endif
+
 /******************************************************************************/
 // Retorna o tempo atual em nanossegundos
 uint64_t getTime ()
@@ -103,6 +111,7 @@ int lcd(int a, int b) {
 /******************************************************************************/
 void sequencial_mult (Matrix *A, Matrix *B, Matrix *C)
 {
+    uint64_t start = getTime();
     for (int i = 0; i < C->rows; i++) {
         for (int j = 0; j < C->cols; j++) {
             for (int k = 0; k < A->cols; k++) {
@@ -110,6 +119,8 @@ void sequencial_mult (Matrix *A, Matrix *B, Matrix *C)
             }
         }
     }
+    uint64_t finish =  getTime();
+    cout << "Tempo de execucao: " << (finish - start) << " nanossegundos" << endl;
 }
 
 /******************************************************************************/
@@ -133,7 +144,7 @@ void sequencial_block_mult (BlockMatrix *A, BlockMatrix *B, BlockMatrix *C)
 
 
 /******************************************************************************/
-void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
+void openmp_mult (Matrix *A, Matrix *B, Matrix *C, size_t T = 20)
 {
 
     D(printf("A->rows: %d\n", A->rows);)
@@ -141,7 +152,7 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
     D(printf("B->rows: %d\n", B->rows);)
     D(printf("B->cols: %d\n", B->cols);)
 
-    int T = 2; //200;
+    // int T = 20; //200;
     size_t p;
     double t0, t1;
     omp_lock_t mutex;
@@ -172,6 +183,8 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
 
 
     D(printf("Blocos das matrizes:\n");)
+    // #pragma omp parallel for collapse (2) private(p)
+    #pragma omp parallel for collapse (2) private(p) num_threads(T)
     for (int j = 0; j < B->cols / B_block_lenght; j++) {
         for (int i = 0; i < A->rows / A_block_high; i++) {
             BlockMatrix blockC(C, A_block_high, B_block_lenght, i * A_block_high, j * B_block_lenght);
@@ -193,26 +206,10 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
         }
     }
 
-
-    #pragma omp parallel for private(p) num_threads(T)
-    //   for (int i = p * A_block_high; i < (p+1) * A_block_high; i++) {
-    //    double sum = 0;
-    //    for (int j = p * A_block_lenght; j < (p+1) * A_block_lenght; j++) {
-    //        // sum += A->matrix[i][j] * B->matrix[i][j];
-        //  // multiplicar matrizes
-    //        printf("Block A[%d .. %d][%d .. %d] * Block B[%d .. %d][%d .. %d]\n", 
-    //                        i, i + A_block_lenght, i, i + A_block_high, j, j + B_block_lenght, j, j + B_block_high);
-    //    }
-        // // C.matrix[i][j] = sum;
-        // printf("\n");
-    //   }
-
-
     t1 = omp_get_wtime();
 
-    // return (t1-t0);
     printf("tempo: %lf\n", t1-t0);
-
+    cout << "Tempo de execucao: " << (t1*1000000000-t0*1000000000) << " nanossegundos" << endl;
 }
 
 /******************************************************************************/
@@ -297,6 +294,14 @@ int test() {
     //     cout << "FALHOU no teste OpenMP\n";
     // }
 
+    Matrix F = MATRIX_mult(&A, &B, 'o');
+
+    if (F.equal(&R)) {
+        cout << "Passou no teste OpenMP\n";
+    } else {
+        cout << "FALHOU no teste OpenMP\n";
+    }
+
     // Matrix C = MATRIX_mult(&A, &B, 'p');
 
     cout << "fim dos testes\n";
@@ -313,6 +318,8 @@ int test() {
 //                 (argumento opcional, "p" eh o padrao)
 int main (int argc, char **argv)
 {
+    T(test();)
+
     if (argc != 4 && argc != 5) {
         cout << "Usage: ./main <Implementation> <matrix_A> <matrix_B> <matrix_C>" << endl;
         return 1;
@@ -348,7 +355,6 @@ int main (int argc, char **argv)
 
     C.save(C_path);
 
-    test();
 }
 
 /******************************************************************************/
