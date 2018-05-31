@@ -32,6 +32,7 @@ public:
     ~Matrix ();                    // Destrutor
     void show ();                  // Exibe a matriz
     void save (char *path);        // Salva a matrix no arquivo path
+    int equal(Matrix *other);
 private:
     void init(int _rows, int _cols); // Inicializa a matriz sem valores
     void zeros ();                 // Preenche a matriz com zeros

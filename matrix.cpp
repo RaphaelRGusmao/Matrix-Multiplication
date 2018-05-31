@@ -91,6 +91,17 @@ void Matrix::save (char *path)
 }
 
 /******************************************************************************/
+int Matrix::equal(Matrix *other)
+{
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			if (matrix[i][j] != other->matrix[i][j]) return 0;
+		}
+	}
+	return 1;
+}
+
+/******************************************************************************/
 void Matrix::init (int _rows, int _cols) {
     rows = _rows;
     cols = _cols;

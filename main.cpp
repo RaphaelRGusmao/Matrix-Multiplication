@@ -15,10 +15,12 @@
 #include "block_matrix.h"
 using namespace std;
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
     #define D(X) X
+#else
+    #define D(X)
 #endif
 
 /******************************************************************************/
@@ -121,7 +123,9 @@ void sequencial_block_mult (BlockMatrix *A, BlockMatrix *B, BlockMatrix *C)
         for (int j = 0; j < B->block_cols; j++) {
             for (int k = 0; k < A->block_cols; k++) {
                 // printf("A->origin_col_index: %d, k: %d\n", A->origin_col_index, k);
-                C->matrix->matrix[A->origin_row_index + i][B->origin_col_index + j] += A->matrix->matrix[A->origin_row_index +i][A->origin_col_index + k] * B->matrix->matrix[A->origin_col_index + k][B->origin_col_index + j];
+                C->matrix->matrix[A->origin_row_index + i][B->origin_col_index + j] += 
+                A->matrix->matrix[A->origin_row_index +i][A->origin_col_index + k] 
+                * B->matrix->matrix[A->origin_col_index + k][B->origin_col_index + j];
             }
         }
     }
@@ -145,6 +149,7 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
 
     t0 = omp_get_wtime();
 
+    // dividir pelo mmc das dimensões
     int b_a = lcd(A->rows, A->cols);
     // int b_a = lcd(A->cols, A->rows);
     // printf("b_a %d\n", b_a);
@@ -166,48 +171,28 @@ void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
     D(printf("B_block_lenght: %d\n", B_block_lenght);)
 
 
-    // BlockMatrix *b0 = new BlockMatrix(A, A_block_high, A_block_lenght, 0, 0);
-    // BlockMatrix b0(A, A_block_high, A_block_lenght, 0, 0);
-    // b0.show();
-
-
-    // printf("Blocos da matriz A\n");
-
-    printf("Blocos das matrizes:\n");
+    D(printf("Blocos das matrizes:\n");)
     for (int j = 0; j < B->cols / B_block_lenght; j++) {
         for (int i = 0; i < A->rows / A_block_high; i++) {
             BlockMatrix blockC(C, A_block_high, B_block_lenght, i * A_block_high, j * B_block_lenght);
             for (int k = 0; k < A->cols / A_block_lenght; k++) {
-                // printf("BlocoC [%d, %d]: \n", i, j);
-                // blockC.show();
-                printf("BlocoA [%d, %d]: \n", i, k);
+                D(printf("BlocoA [%d, %d]: \n", i, k);)
                 BlockMatrix blockA(A, A_block_high, A_block_lenght, i * A_block_high, k * A_block_lenght);
-                blockA.show(); 
-                printf("BlocoB [%d, %d]: \n", k, j);
+                D(blockA.show();)
+                D(printf("BlocoB [%d, %d]: \n", k, j);)
                 BlockMatrix blockB(B, B_block_high, B_block_lenght, k * B_block_high, j * B_block_lenght);
-                blockB.show();
-                // matriz_soma[r, t] += blockA * blockB;
-                // C = C + blockA * blockB
-
-                // BlockMatrix testC(C, A_block_high, B_block_lenght, i * A_block_high, j * B_block_lenght);
-                // sequencial_block_mult(&blockA, &blockB, &testC);
-                // printf("testC intermediario: \n");
-                // testC.show();
-                
+                D(blockB.show();)
                 // Multiplicar as matrizes e armazena na matriz (bloco) C
+                // blockC = blockC + blockA * blockB
                 sequencial_block_mult(&blockA, &blockB, &blockC);
-                // printf("BlocoC intermediario: \n");
-                // blockC.show();
-                // printf("--------------\n");
             }
-            printf("###############\n");
-            printf("BlocoC [%d, %d]: \n", i, j);
-            blockC.show();
-            printf("###############\n");
+            D(printf("###############\n");)
+            D(printf("BlocoC [%d, %d]: \n", i, j);)
+            D(blockC.show();)
+            D(printf("###############\n");)
         }
     }
 
-    // dividir pelo mdc das dimensões
 
     #pragma omp parallel for private(p) num_threads(T)
     //   for (int i = p * A_block_high; i < (p+1) * A_block_high; i++) {
@@ -263,6 +248,61 @@ Matrix MATRIX_mult (Matrix *A, Matrix *B, char implementation)
 }
 
 
+int test() {
+
+    const char* test1 = "matrix/test1.txt";
+    const char* test2 = "matrix/test2.txt";
+
+    Matrix A((char*) test1);
+    Matrix B((char*) test2);
+
+    Matrix R(5, 7, false);
+
+    double **result = new double*[5];
+    result[0] = new double[5*7];
+    double row1[7] = {2,   5,   20,  1,   0,   0,   0};
+    double row2[7] = {0,   8,   10,  0,   0,   0,   0};
+    double row3[7] = {0,   0,   2,   0,   0,   0,   0};
+    double row4[7] = {0,   0,   0,   0,   0,   0,   0};
+    double row5[7] = {0,   0,   8,   0,   0,   0,   0};
+    result[0] = row1;
+    result[1] = row2;
+    result[2] = row3;
+    result[3] = row4;
+    result[4] = row5;
+
+    // double result[5][7] = {
+    // 2,   5,   20,  1,   0,   0,   0,
+    // 0,   8,   10,  0,   0,   0,   0,
+    // 0,   0,   2,   0,   0,   0,   0,
+    // 0,   0,   0,   0,   0,   0,   0,
+    // 0,   0,   8,   0,   0,   0,   0
+    // };
+
+    R.matrix = result;
+
+    Matrix C = MATRIX_mult(&A, &B, 's');
+
+    if (C.equal(&R)) {
+        cout << "Passou no teste sequencial\n";
+    } else {
+        cout << "FALHOU no teste sequencial\n";
+    }
+
+    // C = MATRIX_mult(&A, &B, 'o');
+
+    // if (C.equal(&R)) {
+    //     cout << "Passou no teste OpenMP\n";
+    // } else {
+    //     cout << "FALHOU no teste OpenMP\n";
+    // }
+
+    // Matrix C = MATRIX_mult(&A, &B, 'p');
+
+    cout << "fim dos testes\n";
+}
+
+
 /******************************************************************************/
 // Funcao principal
 // Argumentos:
@@ -307,6 +347,8 @@ int main (int argc, char **argv)
     cout << GREEN << "Tempo de execucao: " << finish - beginning << " ns" << END << endl;
 
     C.save(C_path);
+
+    test();
 }
 
 /******************************************************************************/
