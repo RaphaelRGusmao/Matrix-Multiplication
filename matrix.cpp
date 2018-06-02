@@ -10,7 +10,6 @@
 
 #include <bits/stdc++.h>
 #include <omp.h>
-#include "util.h"
 #include "matrix.h"
 using namespace std;
 
@@ -75,16 +74,14 @@ void Matrix::save (char *path)
 }
 
 /******************************************************************************/
-vector<Matrix> Matrix::divide (int factor)
+vector<Matrix> Matrix::divide (int vertical, int horizontal)
 {
     vector<Matrix> matrix_blocks;
-    int x = factor;
-    int y = factor;
-    for (int i = 0; i < y; i++) {
-        for (int j = 0; j < x; j++) {
+    for (int i = 0; i < vertical; i++) {
+        for (int j = 0; j < horizontal; j++) {
             Matrix block;
-            block.rows = rows/y;
-            block.cols = cols/x;
+            block.rows = rows/vertical;
+            block.cols = cols/horizontal;
             block.matrix = new double*[block.rows];
             for (int k = 0; k < block.rows; k++) {
                 block.matrix[k] = matrix[0] + i*block.rows*cols + j*block.cols + k*cols;
@@ -98,7 +95,7 @@ vector<Matrix> Matrix::divide (int factor)
 /******************************************************************************/
 void Matrix::zeros ()
 {
-	matrix = new double*[rows];
+    matrix = new double*[rows];
     matrix[0] = (double*)calloc(rows*cols, sizeof(*matrix[0]));
     for (int i = 1; i < rows; i++) {
         matrix[i] = matrix[0] + i*cols;
@@ -106,28 +103,64 @@ void Matrix::zeros ()
 }
 
 /******************************************************************************/
+void calculate_blocks (int  A_rows,     int  A_cols,       int  B_cols,
+                       int *A_vertical, int *A_horizontal, int *B_horizontal)
+{
+    int max_blocks = 1024;
+    int max_threads = 64;
+    int max_sum = 0;
+    for (int i = 1; i <= max_blocks; i++) {
+        if (A_cols%i != 0) continue;
+        // Divide A_cols e B_rows em i blocos
+        int j, k;
+        for (j = max_blocks/i; j > 0; j--) {
+            if (j > sqrt(max_threads) || A_rows%j != 0) continue;
+            // Divide A_rows em j blocos
+            break;
+        }
+        for (k = max_blocks/i; k > 0; k--) {
+            if (k > sqrt(max_threads) || B_cols%k != 0) continue;
+            // Divide B_cols em k blocos
+            break;
+        }
+        if (i*(j+k) > max_sum) {
+            max_sum = i*(j+k);
+            *A_horizontal = i;
+            *A_vertical = j;
+            *B_horizontal = k;
+        }
+    }
+}
+
+/******************************************************************************/
+int A_vertical, A_horizontal, B_vertical, B_horizontal; // Numero de blocos
 vector<Matrix> A_blocks; // Submatrizes de A
 vector<Matrix> B_blocks; // Submatrizes de B
 vector<Matrix> C_blocks; // Submatrizes de C
 Matrix MATRIX_mult (Matrix *A, Matrix *B, char implementation)
 {
+    cout << "A(" <<  A->rows << " x " <<  A->cols << ") * "
+         << "B(" <<  B->rows << " x " <<  B->cols << ") ";
     if (A->cols != B->rows) {
-        cout << YELLOW << "The matrices are not compatible" << END << endl;
-        exit(1);
+        cout << endl << YELLOW << "The matrices are not compatible" << END << endl;
+        Matrix C;
+        return C; // NULL
     }
     Matrix C(A->rows, B->cols);
+    cout << "= C(" <<  C.rows  << " x " <<  C.cols  << ") "   << endl;
     switch (implementation) {
         case 's':
-            cout << UNDERLINE << CYAN << "Sequencial" << END << endl << endl;
-            sequencial_mult(A, B, &C);
+            cout << UNDERLINE << CYAN << "Sequential" << END << endl;
+            cout << "Threads working: "<< CYAN << "1" << END << endl;
+            sequential_mult(A, B, &C);
             break;
         case 'o':
-            cout << UNDERLINE << CYAN << "OpenMP" << END << endl << endl;
+            cout << UNDERLINE << CYAN << "OpenMP" << END << endl;
             openmp_mult(A, B, &C);
             break;
         case 'p':
         default:
-            cout << UNDERLINE << CYAN << "Pthreads" << END << endl << endl;
+            cout << UNDERLINE << CYAN << "Pthreads" << END << endl;
             pthreads_mult(A, B, &C);
             break;
     }
@@ -135,7 +168,7 @@ Matrix MATRIX_mult (Matrix *A, Matrix *B, char implementation)
 }
 
 /******************************************************************************/
-void sequencial_mult (Matrix *A, Matrix *B, Matrix *C)
+void sequential_mult (Matrix *A, Matrix *B, Matrix *C)
 {
     for (int i = 0; i < C->rows; i++) {
         for (int j = 0; j < C->cols; j++) {
@@ -147,109 +180,69 @@ void sequencial_mult (Matrix *A, Matrix *B, Matrix *C)
 }
 
 /******************************************************************************/
-void sequencial_add (Matrix *A, Matrix *B, Matrix *C)
-{
-    for (int i = 0; i < C->rows; i++) {
-        for (int j = 0; j < C->cols; j++) {
-            C->matrix[i][j] = A->matrix[i][j] + B->matrix[i][j];
-        }
-    }
-}
-
-/******************************************************************************/
 void openmp_mult (Matrix *A, Matrix *B, Matrix *C)
 {
-    // D(printf("A->rows: %d\n", A->rows);)
-    // D(printf("A->cols: %d\n", A->cols);)
-    // D(printf("B->rows: %d\n", B->rows);)
-    // D(printf("B->cols: %d\n", B->cols);)
-    //
-    // size_t T = 20;
-    //
-    // // int T = 20; //200;
-    // size_t p;
-    // double t0, t1;
-    // omp_lock_t mutex;
-    // omp_init_lock(&mutex);
-    //
-    // t0 = omp_get_wtime();
-    //
-    // // dividir pelo mmc das dimensões
-    // int b_a = lcd(A->rows, A->cols);
-    // // int b_a = lcd(A->cols, A->rows);
-    // // printf("b_a %d\n", b_a);
-    //
-    // // Altura de cada um dos blocos da matriz A
-    // int A_block_high = b_a;
-    // D(printf("A_block_high: %d\n", A_block_high);)
-    //
-    // // Comprimento de cada um dos blocos da matriz A e também altura de
-    // // cada um dos blocos da matriz B
-    // int A_block_lenght = lcd(A->cols, B->rows);
-    // int B_block_high = A_block_lenght;
-    // D(printf("A_block_lenght = B_block_high: %d\n", A_block_lenght);)
-    //
-    // // Comprimento de cada um dos blocos da matriz B
-    // int b_b = lcd(B->rows, B->cols);
-    // // int B_block_lenght = B->cols / b_b;
-    // int B_block_lenght = b_b;
-    // D(printf("B_block_lenght: %d\n", B_block_lenght);)
-    //
-    // D(printf("Blocos das matrizes:\n");)
-    // // #pragma omp parallel for collapse (2) private(p)
-    // #pragma omp parallel for collapse (2) private(p) num_threads(T)
-    // for (int j = 0; j < B->cols / B_block_lenght; j++) {
-    //     for (int i = 0; i < A->rows / A_block_high; i++) {
-    //         BlockMatrix blockC(C, A_block_high, B_block_lenght, i * A_block_high, j * B_block_lenght);
-    //         for (int k = 0; k < A->cols / A_block_lenght; k++) {
-    //             D(printf("BlocoA [%d, %d]: \n", i, k);)
-    //             BlockMatrix blockA(A, A_block_high, A_block_lenght, i * A_block_high, k * A_block_lenght);
-    //             D(blockA.show();)
-    //             D(printf("BlocoB [%d, %d]: \n", k, j);)
-    //             BlockMatrix blockB(B, B_block_high, B_block_lenght, k * B_block_high, j * B_block_lenght);
-    //             D(blockB.show();)
-    //             // Multiplicar as matrizes e armazena na matriz (bloco) C
-    //             // blockC = blockC + blockA * blockB
-    //             sequencial_block_mult(&blockA, &blockB, &blockC);
-    //         }
-    //         D(printf("###############\n");)
-    //         D(printf("BlocoC [%d, %d]: \n", i, j);)
-    //         D(blockC.show();)
-    //         D(printf("###############\n");)
-    //     }
-    // }
-    //
-    // t1 = omp_get_wtime();
-    //
-    // printf("tempo: %lf\n", t1-t0);
-    // cout << "Tempo de execucao: " << (t1*1000000000-t0*1000000000) << " nanossegundos" << endl;
-	// // TODO O tempo ja eh calculado na main, nao precisa calcular aqui
+    // Calcula os tamanhos dos blocos das matrizes
+    calculate_blocks(A->rows,     A->cols,       B->cols,
+                    &A_vertical, &A_horizontal, &B_horizontal);
+    B_vertical = A_horizontal;
+    int n_threads = A_vertical*B_horizontal;
+
+    // Divide as matrizes em submatrizes/blocos
+    A_blocks = A->divide(A_vertical, A_horizontal);
+    B_blocks = B->divide(B_vertical, B_horizontal);
+    C_blocks = C->divide(A_vertical, B_horizontal);
+    cout << "Matrix A divided into " << CYAN << A_vertical << "*" << A_horizontal
+         << " = " << A_vertical*A_horizontal << END " blocks" << endl;
+    cout << "Matrix B divided into " << CYAN << B_vertical << "*" << B_horizontal
+         << " = " << B_vertical*B_horizontal << END " blocks" << endl;
+    cout << "Threads working: "      << CYAN << n_threads << END << endl;
+
+    // OpenMP
+    int id;
+    #pragma omp parallel for private(id) num_threads(n_threads)
+    for (id = 0; id < n_threads; id++) {
+        int i = id/B_horizontal;
+        int j = id%B_horizontal;
+        for (int k = 0; k < A_horizontal; k++) {
+            sequential_mult(&A_blocks[i*A_horizontal + k], &B_blocks[k*B_horizontal + j], &C_blocks[id]);
+        }
+    }
 }
 
 /******************************************************************************/
 void pthreads_mult (Matrix *A, Matrix *B, Matrix *C)
 {
-	int factor = gcd(gcd(A->rows, A->cols), B->cols);
+    // Calcula os tamanhos dos blocos das matrizes
+    calculate_blocks(A->rows,     A->cols,       B->cols,
+                    &A_vertical, &A_horizontal, &B_horizontal);
+    B_vertical = A_horizontal;
+    int n_threads = A_vertical*B_horizontal;
 
-	// Divide as matrizes em submatrizes/blocos
-    A_blocks = A->divide(factor);
-    B_blocks = B->divide(factor);
-    C_blocks = C->divide(factor);
+    // Divide as matrizes em submatrizes/blocos
+    A_blocks = A->divide(A_vertical, A_horizontal);
+    B_blocks = B->divide(B_vertical, B_horizontal);
+    C_blocks = C->divide(A_vertical, B_horizontal);
+    cout << "Matrix A divided into " << CYAN << A_vertical << "*" << A_horizontal
+         << " = " << A_vertical*A_horizontal << END " blocks" << endl;
+    cout << "Matrix B divided into " << CYAN << B_vertical << "*" << B_horizontal
+         << " = " << B_vertical*B_horizontal << END " blocks" << endl;
+    cout << "Threads working: "      << CYAN << n_threads << END << endl;
 
     // Cria as threads
-    vector<pthread_t> threads(factor*factor);
-    for (long i = 0; i < factor*factor; i++) {
+    vector<pthread_t> threads(n_threads);
+    for (long i = 0; i < n_threads; i++) {
         if (pthread_create(&threads[i], NULL, MULT_thread, (void*)i)) {
-           cout << YELLOW << "Error creating thread " << i << END << endl;
-           exit(1);
+            cout << YELLOW << "Error creating thread " << i << END << endl;
+            exit(1);
         }
     }
 
     // Espera as threads terminarem de executar
-    for (int i = 0; i < factor*factor; i++) {
+    for (int i = 0; i < n_threads; i++) {
         if (pthread_join(threads[i], NULL)) {
-           cout << YELLOW << "Error joining thread " << i << END << endl;
-           exit(1);
+            cout << YELLOW << "Error joining thread " << i << END << endl;
+            exit(1);
         }
     }
 }
@@ -258,13 +251,10 @@ void pthreads_mult (Matrix *A, Matrix *B, Matrix *C)
 void *MULT_thread (void *p_id)
 {
     long id = (long)p_id;
-    int factor = (int)sqrt(C_blocks.size());
-    int i = id/factor;
-    int j = id%factor;
-    for (int k = 0; k < factor; k++) {
-        Matrix AB(C_blocks[id].rows, C_blocks[id].cols);
-        sequencial_mult(&A_blocks[i*factor + k], &B_blocks[k*factor + j], &AB);
-        sequencial_add(&C_blocks[id], &AB, &C_blocks[id]);
+    int i = id/B_horizontal;
+    int j = id%B_horizontal;
+    for (int k = 0; k < A_horizontal; k++) {
+        sequential_mult(&A_blocks[i*A_horizontal + k], &B_blocks[k*B_horizontal + j], &C_blocks[id]);
     }
 }
 

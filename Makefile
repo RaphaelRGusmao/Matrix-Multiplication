@@ -11,8 +11,8 @@
 .PHONY: clean
 CC = g++
 CFLAGS = -Wall -O2 -g
+CXXFLAGS = -fopenmp
 OBJS = \
-	util.o \
 	matrix.o \
 	main.o
 
@@ -32,16 +32,6 @@ clean:
 	rm -f *.o *~
 
 run:
-	clear
-	make
-	clear
-	./main p "matrix/A_python.txt" "matrix/B_python.txt" "matrix/C.txt"
+	./main p "matrix/A.txt" "matrix/B.txt" "matrix/C.txt"
 
-mar_test:
-	./main o "matrix/test5.txt" "matrix/test6.txt" "matrix/result_test.txt"
-#pequeno teste de corretude
-#	./main o "matrix/test1.txt" "matrix/test2.txt" "matrix/result_test.txt"
-#	./main o "matrix/test1.txt" "matrix/test3.txt" "matrix/result_test.txt"
-#teste de compatibilidade das dimensoes das matrizes
-#	./main o "matrix/test3.txt" "matrix/test4.txt" "matrix/result_test.txt"
 ################################################################################
