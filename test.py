@@ -1,5 +1,7 @@
 import numpy as np
 import random
+import sys
+
 
 class Color:
     GREEN  = '\033[32;1m'
@@ -50,12 +52,39 @@ def check (e):
         for j in range(len(C[0])):
             if(abs(AB[i][j] - C[i][j]) > e):
                 print(Color.YELLOW + "Valor errado!\n" + Color.END)
+                print("AB[{}][{}]: {}".format(i, j, AB[i][j]))
+                print("C[{}][{}]: {}".format(i, j, C[i][j]))
+
                 return
     print(Color.GREEN + "Tudo certo!\n" + Color.END)
 
+def crazy_matrix_random ():
+    rows_A = random.randint(0, 2000)
+    cols_A = random.randint(0, 2000)
+    cols_B = random.randint(0, 2000)
+    if (random.randint(0, 1)):
+        rows_A = int(rows_A / 2)
+        cols_A = int(cols_A / 2)
+        cols_B = int(cols_B / 2)
+    matrix_save(matrix_random(rows_A, cols_A, -100, 100), "matrix/A.txt")
+    matrix_save(matrix_random(cols_A, cols_B, -100, 100), "matrix/B.txt")
+
+
 def main ():
+    if (len(sys.argv) > 1):
+        if sys.argv[1] == "-g":
+            matrix_save(matrix_random(1400, 1500, -100, 100), "matrix/A.txt")
+            matrix_save(matrix_random(1500, 1600, -100, 100), "matrix/B.txt")
+        elif (sys.argv[1] == "-z"):
+            crazy_matrix_random()
+        elif (sys.argv[1] == "-c"):
+            check(0.0000005)
+        else:
+            check(0.0000005)
+            matrix_save(matrix_random(1400, 1500, -100, 100), "matrix/A.txt")
+            matrix_save(matrix_random(1500, 1600, -100, 100), "matrix/B.txt")
+
     # check(1)
-    matrix_save(matrix_random(1400, 1500, -100, 100), "matrix/A.txt")
-    matrix_save(matrix_random(1500, 1600, -100, 100), "matrix/B.txt")
 
 main()
+# check(0.000000000005)

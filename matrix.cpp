@@ -66,7 +66,7 @@ void Matrix::save (char *path)
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             if (matrix[i][j]) {
-                file << i+1 << " " << j+1 << " " << matrix[i][j] << endl;
+                file << i+1 << " " << j+1 << " " << std::fixed << std::setprecision(8) << matrix[i][j] << endl;
             }
         }
     }
