@@ -8,8 +8,6 @@
 #                       Raphael R. Gusmao - NUSP 9778561                       #
 ################################################################################
 
-    ...Texto...
-
 ################################################################################
 
 O EP1 recebe como argumentos:
@@ -30,23 +28,25 @@ Para executar o EP1 no terminal, digite:
 ################################################################################
 
 Media de tempo das implementacoes:
-    Pthreads   : ? s
-    OpenMP     : ? s
-    Sequential : ? s
+    Pthreads   : 16.62354 segundos
+    OpenMP     : 16.1581 segundos
+    Sequential : 63.6188 segundos
 
-- Foram executados X? testes com cada implementacao.
+- Foram executados 10 testes com cada implementacao.
 
 - Os testes foram realizados com matrizes A(1400 x 1500) * B(1500  x  1600)  com
   numeros reais aleatorios uniformemente distribuidos entre -100 e 100.
 
 - Para gerar matrizes desse tipo, digite:
-    $ python test.py
+    $ python test.py -g
 
 - As matrizes serao salvas em "matrix/A_python.txt" e "matrix/B_python.txt"
 
-- Ha tambem uma funcao que verifica se a resposta esta correta.  Basta  comentar
-  as linhas 59 e 58, descomentar a linha 57 do arquivo "test.py" e digitar:
-    $ python test.py
+- Ha tambem uma funcao que verifica se a resposta esta correta. Basta executar:
+    $ python test.py -c
+
+- Ha um arquivo de testes automatizados chamado test_shell.sh. Para executa-lo:
+    $./test_shell.sh
 
 ################################################################################
 

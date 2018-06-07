@@ -21,6 +21,7 @@ all: main
 main: $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ -lpthread -fopenmp
 	make clean
+	python3 test.py -g
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
